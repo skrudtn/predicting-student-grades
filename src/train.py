@@ -3,10 +3,9 @@ import sys
 import time
 import glob
 import torch
-import numpy as np
 from model import Linear
 from loader import UCIStudentPerformance
-from config import ConfigLinear
+from config import Config
 
 
 class Trainer(object):
@@ -46,13 +45,15 @@ class Trainer(object):
 
     @staticmethod
     def get_accuracy(target, output):
-        _, argmax = torch.max(output, 1)
-        accuracy = (target == argmax.squeeze()).float().mean()
+        # print("target", target.squeeze())
+        # print("output", output.squeeze())
+        accuracy = 1-(abs(target.squeeze() - output.squeeze()))/20
+        # print("accuracy: ", accuracy)
         return accuracy
 
 
 class LinearTrainer(Trainer):
-    config = ConfigLinear.instance()
+    config = Config.instance()
 
     def __init__(self, model, data_loader, optimizer):
         super().__init__(model, data_loader, optimizer)
@@ -65,7 +66,8 @@ class LinearTrainer(Trainer):
     def train(self, max_epoch, batch_size):
         print("Training started")
         if torch.cuda.is_available():
-            self.model = self.model.cuda()
+            # self.model = self.model.cuda()
+            pass
 
         self.model.train()
         epoch_resume = 0
@@ -83,51 +85,44 @@ class LinearTrainer(Trainer):
             accuracy_sum = 0
             loss_sum = 0
             self.current_epoch = epoch
-            for batch_idx, (_data, target) in enumerate(self.data_loader):
+            for batch_idx, (data, target) in enumerate(self.data_loader):
                 # Transpose vector to make it (num of words / batch size) * batch size * index size(1).
                 # _data = np.transpose(_data, (1, 0, 2))
-                _data, target = _data.to(device=self.device), target.to(device=self.device)
-
-                """
-                # Initialize the gradient of model
-                self.optimizer.zero_grad()
-                output, hidden, cell = self.model(_data)
+                # data, target = data.to(device=self.device), target.to(device=self.device)
+                data, target = data.type(torch.FloatTensor), target.type(torch.FloatTensor)
+                output = self.model(data)
                 loss = self.config.CRITERION(output, target)
                 loss.backward()
                 self.optimizer.step()
-                if self.config.DEBUG_MODE:
-                    print("Train Epoch: {}/{} [{}/{} ({:.0f}%)]".format(
-                        epoch, max_epoch, batch_idx * len(_data),
-                        len(self.data_loader.dataset), 100. * batch_idx / len(self.data_loader)))
-                    print("Loss: {:.6f}".format(loss.item()))
-                    print("target : ", target)
-                    print("output : ", output, end="\n\n")
+                # if self.config.DEBUG_MODE:
+                #     print("Train Epoch: {}/{} [{}/{} ({:.0f}%)]".format(
+                #         epoch, max_epoch, batch_idx * len(data),
+                #         len(self.data_loader.dataset), 100. * batch_idx / len(self.data_loader)))
+                #     print("Loss: {:.6f}".format(loss.item()))
+                #     print("target : ", target)
+                #     print("output : ", output, end="\n\n")
                 accuracy = self.get_accuracy(target, output)
                 accuracy_sum += accuracy
                 loss_sum += loss
-                """
-            if self.config.LOGGING_ENABLE:
-                if len(self.data_loader) == 0:
-                    raise Exception("Data size is smaller than batch size.")
-                loss_avg = loss_sum / len(self.data_loader)
-                accuracy_avg = accuracy_sum / len(self.data_loader)
-                self.logger.log(loss_avg, accuracy_avg, self.model.named_parameters(), self.current_epoch)
-                self.save_checkpoint({
-                    "epoch": epoch + 1,
-                    "model": self.model.state_dict(),
-                    "optimizer": self.optimizer.state_dict(),
-                })
-            print("End")
+
+            print("accuracy avg : ", accuracy_sum/len(self.data_loader))
+            print("loss avg : ", loss_sum/len(self.data_loader))
+
+        print("End")
 
 
 def main():
-    config = ConfigLinear.instance()
+    config = Config.instance()
     loader = UCIStudentPerformance(
         batch_size=config.BATCH_SIZE,
         is_eval=False,
         debug=config.DEBUG_MODE)
 
-    model = Linear
+    model = Linear(
+        config.INPUT_SIZE,
+        config.HIDDEN_SIZE,
+        config.OUTPUT_SIZE,
+    )
 
     optimizer = torch.optim.SGD(model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY)
     trainer = LinearTrainer(model, loader, optimizer)

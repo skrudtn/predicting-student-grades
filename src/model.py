@@ -12,6 +12,12 @@ class Linear(nn.Module):
         self.ReLU = nn.ReLU()
         self.linear2 = nn.Linear(H, D_out)
 
+    def forward(self, input):
+        x = self.linear1(input)
+        x = self.ReLU(x)
+        x = self.linear2(x)
+        return x
+
 
 class CNN(nn.Module):
     def __init__(self):

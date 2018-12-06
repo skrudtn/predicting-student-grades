@@ -80,14 +80,14 @@ class StudentPerformance(data.Dataset):
 
             for i in range(len(lines)):
                 for j in range(len(lines[i])):
-                    lines[i][j] = int(lines[i][j])
+                    lines[i][j] = float(lines[i][j])
 
             for line in lines:
-                preprocessed[mode]['data'].append(line[:-3])
-                preprocessed[mode]['targets'].append(line[-3:])
+                preprocessed[mode]['data'].append(line[:-1])
+                preprocessed[mode]['targets'].append(line[-1:])
 
-            preprocessed[mode]['targets'] = torch.from_numpy(np.array(preprocessed[mode]['targets'])).long()
-            preprocessed[mode]['data'] = torch.from_numpy(np.array(preprocessed[mode]['data'])).long()
+            preprocessed[mode]['targets'] = torch.from_numpy(np.array(preprocessed[mode]['targets']))
+            preprocessed[mode]['data'] = torch.from_numpy(np.array(preprocessed[mode]['data']))
             f.close()
 
         try:

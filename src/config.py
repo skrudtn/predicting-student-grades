@@ -60,15 +60,16 @@ class Config(ConstSingleton):
         self.LEARNING_RATE = 0.001
         self.MAX_EPOCH = 300
         self.WEIGHT_DECAY = 0.0003
-        self.CRITERION = torch.nn.NLLLoss()
+        self.CRITERION = torch.nn.MSELoss()
 
         # [Model]
-        self.HIDDEN_SIZE = 100
-        self.OUTPUT_SIZE = 2  # output is one of pos([1, 0]) and neg([0, 1]).
-        self.BATCH_SIZE = 32
+        self.INPUT_SIZE = 32
+        self.HIDDEN_SIZE = 12
+        self.OUTPUT_SIZE = 1  # output is one of pos([1, 0]) and neg([0, 1]).
+        self.BATCH_SIZE = 1
 
         # [ETC]
-        self.DEBUG_MODE = False
+        self.DEBUG_MODE = True
         self.LOGGING_ENABLE = True
         self.CHECKPOINT_ENABLE = False
 
