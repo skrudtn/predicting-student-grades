@@ -53,6 +53,7 @@ class Trainer(object):
 
 
 class LinearTrainer(Trainer):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     config = Config.instance()
 
     def __init__(self, model, data_loader, optimizer):
@@ -66,8 +67,7 @@ class LinearTrainer(Trainer):
     def train(self, max_epoch, batch_size):
         print("Training started")
         if torch.cuda.is_available():
-            # self.model = self.model.cuda()
-            pass
+            self.model = self.model.cuda()
 
         self.model.train()
         epoch_resume = 0
@@ -88,8 +88,7 @@ class LinearTrainer(Trainer):
             for batch_idx, (data, target) in enumerate(self.data_loader):
                 # Transpose vector to make it (num of words / batch size) * batch size * index size(1).
                 # _data = np.transpose(_data, (1, 0, 2))
-                # data, target = data.to(device=self.device), target.to(device=self.device)
-                data, target = data.type(torch.FloatTensor), target.type(torch.FloatTensor)
+                data, target = data.type(torch.FloatTensor).to(device=self.device), target.type(torch.FloatTensor).to(device=self.device)
                 output = self.model(data)
                 loss = self.config.CRITERION(output, target)
                 loss.backward()
