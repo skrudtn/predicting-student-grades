@@ -20,7 +20,7 @@ class UCIStudentPerformance(BaseData):
         self.data = StudentPerformance(
             self.root,
             train=not is_eval,
-            debug_mode=True,
+            debug_mode=debug,
             subject='mat'
         )
 
@@ -35,8 +35,7 @@ class UCIStudentPerformance(BaseData):
 
 
 if __name__ == '__main__':
-    loader = UCIStudentPerformance(1,True,False).load()
-    print(loader.dataset)
+    loader = UCIStudentPerformance(1, False, False).load()
     for idx, (data, target) in enumerate(loader):
         print(idx)
         print(data)

@@ -4,7 +4,6 @@ import os
 class Helper:
 
     def check_path_exists(self, path):
-        print(os.path.exists(path))
         return os.path.exists(path)
 
     def chomp_new_line(self, string):

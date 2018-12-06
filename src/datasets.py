@@ -2,6 +2,7 @@ import csv
 import os
 import torch
 import torch.utils.data as data
+import numpy as np
 from helper import Helper
 from config import Config
 
@@ -85,6 +86,8 @@ class StudentPerformance(data.Dataset):
                 preprocessed[mode]['data'].append(line[:-3])
                 preprocessed[mode]['targets'].append(line[-3:])
 
+            preprocessed[mode]['targets'] = torch.from_numpy(np.array(preprocessed[mode]['targets'])).long()
+            preprocessed[mode]['data'] = torch.from_numpy(np.array(preprocessed[mode]['data'])).long()
             f.close()
 
         try:
