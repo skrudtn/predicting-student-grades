@@ -35,4 +35,9 @@ class UCIStudentPerformance(BaseData):
 
 
 if __name__ == '__main__':
-    pass
+    loader = UCIStudentPerformance(1,True,False).load()
+    print(loader.dataset)
+    for idx, (data, target) in enumerate(loader):
+        print(idx)
+        print(data)
+
