@@ -60,19 +60,17 @@ class StudentPerformance(data.Dataset):
                 line = line[0]
                 line = line.replace('\"', '').replace('\'', '')\
                     .replace('yes', '1').replace('no', '0')\
-                    .replace('GP', '1').replace('MS', '0')\
-                    .replace('GT3', '1').replace('LE3', '0')\
-                    .replace('GP', '1').replace('MS', '0')\
-                    .replace('F', '1').replace('M', '0')\
-                    .replace('U', '1').replace('R', '0')\
-                    .replace('T', '1').replace('A', '0')\
-                    .replace('mother', '2').replace('father', '1').replace('other', '0')\
-                    .replace('teacher', '4').replace('health', '3').replace('services', '2')\
-                    .replace('at_home', '1').replace('other', '0').replace('teacher', '4')\
-                    .replace('home', '3').replace('reputation', '2')\
-                    .replace('course', '1').replace('other', '0')\
-                    .replace('home', '3').replace('reputation', '2')\
-                    .replace('course', '1').replace('other', '0')
+                    .replace('GP', '1').replace('MS', '2')\
+                    .replace('GT3', '1').replace('LE3', '2')\
+                    .replace('GP', '1').replace('MS', '2')\
+                    .replace('F', '1').replace('M', '2')\
+                    .replace('U', '1').replace('R', '2')\
+                    .replace('T', '1').replace('A', '2')\
+                    .replace('mother', '3').replace('father', '2').replace('other', '1')\
+                    .replace('teacher', '5').replace('health', '4').replace('services', '3')\
+                    .replace('at_home', '2').replace('other', '1')\
+                    .replace('teacher', '5').replace('home', '4').replace('reputation', '3').replace('course', '2')\
+                    .replace('home', '4').replace('reputation', '3').replace('course', '2')
 
                 line = line.split(";")
                 lines.append(line)

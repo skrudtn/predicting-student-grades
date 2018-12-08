@@ -9,7 +9,9 @@ from config import Config
 
 
 class Trainer(object):
+    config = Config.instance()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = "cpu"
     checkpoint_folder = "checkpoints"
 
     def __init__(self, model, data_loader, optimizer):
@@ -19,7 +21,6 @@ class Trainer(object):
         self.prefix = model.__class__.__name__ + "_"
         self.checkpoint_filename = self.prefix + str(int(time.time())) + ".pt"
 
-    # TODO(kyungsoo): Make checkpoint for log
     def save_checkpoint(self, checkpoint):
         try:
             os.mkdir(self.checkpoint_folder)
@@ -45,16 +46,12 @@ class Trainer(object):
 
     @staticmethod
     def get_accuracy(target, output):
-        # print("target", target.squeeze())
-        # print("output", output.squeeze())
-        accuracy = 1-(abs(target.squeeze() - output.squeeze()))/20
-        # print("accuracy: ", accuracy)
-        return accuracy
+        max_output = 20
+        errors = list(map(lambda val1, val2: abs(val1 - val2), target, output))
+        return list((max_output - error) / max_output for error in errors)[0]
 
 
 class LinearTrainer(Trainer):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    config = Config.instance()
 
     def __init__(self, model, data_loader, optimizer):
         super().__init__(model, data_loader, optimizer)
@@ -66,8 +63,8 @@ class LinearTrainer(Trainer):
 
     def train(self, max_epoch, batch_size):
         print("Training started")
-        if torch.cuda.is_available():
-            self.model = self.model.cuda()
+        # if torch.cuda.is_available():
+        #     self.model = self.model.cuda()
 
         self.model.train()
         epoch_resume = 0
@@ -86,24 +83,28 @@ class LinearTrainer(Trainer):
             loss_sum = 0
             self.current_epoch = epoch
             for batch_idx, (data, target) in enumerate(self.data_loader):
-                # Transpose vector to make it (num of words / batch size) * batch size * index size(1).
-                # _data = np.transpose(_data, (1, 0, 2))
                 data, target = data.type(torch.FloatTensor).to(device=self.device), target.type(torch.FloatTensor).to(device=self.device)
+                self.optimizer.zero_grad()
                 output = self.model(data)
                 loss = self.config.CRITERION(output, target)
                 loss.backward()
                 self.optimizer.step()
+
                 # if self.config.DEBUG_MODE:
+                #     if batch_idx % 50 != 0:
+                #         continue
                 #     print("Train Epoch: {}/{} [{}/{} ({:.0f}%)]".format(
                 #         epoch, max_epoch, batch_idx * len(data),
                 #         len(self.data_loader.dataset), 100. * batch_idx / len(self.data_loader)))
                 #     print("Loss: {:.6f}".format(loss.item()))
                 #     print("target : ", target)
                 #     print("output : ", output, end="\n\n")
+
                 accuracy = self.get_accuracy(target, output)
                 accuracy_sum += accuracy
                 loss_sum += loss
 
+            print("epoch : ", epoch)
             print("accuracy avg : ", accuracy_sum/len(self.data_loader))
             print("loss avg : ", loss_sum/len(self.data_loader))
 
@@ -117,13 +118,9 @@ def main():
         is_eval=False,
         debug=config.DEBUG_MODE)
 
-    model = Linear(
-        config.INPUT_SIZE,
-        config.HIDDEN_SIZE,
-        config.OUTPUT_SIZE,
-    )
+    model = Linear(config.DEBUG_MODE)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=config.LEARNING_RATE, weight_decay=config.WEIGHT_DECAY)
+    optimizer = torch.optim.SGD(model.parameters(), lr=config.LEARNING_RATE)
     trainer = LinearTrainer(model, loader, optimizer)
     trainer.train(config.MAX_EPOCH, config.BATCH_SIZE)
 

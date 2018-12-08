@@ -65,11 +65,10 @@ class Config(ConstSingleton):
         # [Model]
         self.INPUT_SIZE = 32
         self.HIDDEN_SIZE = 12
-        self.OUTPUT_SIZE = 1  # output is one of pos([1, 0]) and neg([0, 1]).
+        self.OUTPUT_SIZE = 1
         self.BATCH_SIZE = 1
 
         # [ETC]
         self.DEBUG_MODE = True
-        self.LOGGING_ENABLE = True
+        self.LOGGING_ENABLE = False
         self.CHECKPOINT_ENABLE = False
-

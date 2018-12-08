@@ -9,6 +9,7 @@ class BaseData(object):
     """
     def __init__(self):
         self.cuda = torch.cuda.is_available()
+        self.cuda = False
 
 
 class UCIStudentPerformance(BaseData):
@@ -26,6 +27,7 @@ class UCIStudentPerformance(BaseData):
 
     def load(self):
         additional_options = {'num_workers': 1, 'pin_memory': True} if self.cuda else {}
+        additional_options = {}
         return torch.utils.data.DataLoader(
             self.data,
             batch_size=self.batch_size,
