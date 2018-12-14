@@ -54,9 +54,6 @@ class ANNTrainer(Trainer):
 
     def __init__(self, model, data_loader, optimizer):
         super().__init__(model, data_loader, optimizer)
-        if self.config.LOGGING_ENABLE:
-            from tensor_board_logger import TensorBoardLogger
-            self.logger = TensorBoardLogger(os.path.join("logs", model.__class__.__name__))
 
         self.current_epoch = 0
         print(data_loader.data)
