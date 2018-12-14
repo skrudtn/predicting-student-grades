@@ -3,7 +3,7 @@ import sys
 import time
 import glob
 import torch
-from model import Linear
+from model import ANN
 from loader import UCIStudentPerformance
 from config import Config
 
@@ -11,7 +11,6 @@ from config import Config
 class Trainer(object):
     config = Config.instance()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = "cpu"
     checkpoint_folder = "checkpoints"
 
     def __init__(self, model, data_loader, optimizer):
@@ -41,7 +40,7 @@ class Trainer(object):
     def train(self, max_epoch, batch_size):
         raise NotImplementedError
 
-    def evaluate(self, batch_size):
+    def evaluate(self):
         raise NotImplementedError
 
     @staticmethod
@@ -51,7 +50,7 @@ class Trainer(object):
         return list((max_output - error) / max_output for error in errors)[0]
 
 
-class LinearTrainer(Trainer):
+class ANNTrainer(Trainer):
 
     def __init__(self, model, data_loader, optimizer):
         super().__init__(model, data_loader, optimizer)
@@ -60,6 +59,7 @@ class LinearTrainer(Trainer):
             self.logger = TensorBoardLogger(os.path.join("logs", model.__class__.__name__))
 
         self.current_epoch = 0
+        print(data_loader.data)
 
     def train(self, max_epoch, batch_size):
         print("Training started")
@@ -83,22 +83,23 @@ class LinearTrainer(Trainer):
             loss_sum = 0
             self.current_epoch = epoch
             for batch_idx, (data, target) in enumerate(self.data_loader):
-                data, target = data.type(torch.FloatTensor).to(device=self.device), target.type(torch.FloatTensor).to(device=self.device)
+                data, target = data.type(torch.FloatTensor).to(device=self.device), target.type(torch.FloatTensor).to(
+                    device=self.device)
                 self.optimizer.zero_grad()
                 output = self.model(data)
                 loss = self.config.CRITERION(output, target)
                 loss.backward()
                 self.optimizer.step()
 
-                # if self.config.DEBUG_MODE:
-                #     if batch_idx % 50 != 0:
-                #         continue
-                #     print("Train Epoch: {}/{} [{}/{} ({:.0f}%)]".format(
-                #         epoch, max_epoch, batch_idx * len(data),
-                #         len(self.data_loader.dataset), 100. * batch_idx / len(self.data_loader)))
-                #     print("Loss: {:.6f}".format(loss.item()))
-                #     print("target : ", target)
-                #     print("output : ", output, end="\n\n")
+                if self.config.DEBUG_MODE:
+                    if batch_idx % 50 != 0:
+                        continue
+                    print("Train Epoch: {}/{} [{}/{} ({:.0f}%)]".format(
+                        epoch, max_epoch, batch_idx * len(data),
+                        len(self.data_loader.dataset), 100. * batch_idx / len(self.data_loader)))
+                    print("Loss: {:.6f}".format(loss.item()))
+                    print("target : ", target)
+                    print("output : ", output, end="\n\n")
 
                 accuracy = self.get_accuracy(target, output)
                 accuracy_sum += accuracy
@@ -115,14 +116,17 @@ def main():
     config = Config.instance()
     loader = UCIStudentPerformance(
         batch_size=config.BATCH_SIZE,
-        is_eval=False,
+        is_eval=config.TRAIN_MODE,
         debug=config.DEBUG_MODE)
 
-    model = Linear(config.DEBUG_MODE)
+    model = ANN(config.DEBUG_MODE)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=config.LEARNING_RATE)
-    trainer = LinearTrainer(model, loader, optimizer)
-    trainer.train(config.MAX_EPOCH, config.BATCH_SIZE)
+    trainer = ANNTrainer(model, loader, optimizer)
+    if config.TRAIN_MODE:
+        trainer.train(config.MAX_EPOCH, config.BATCH_SIZE)
+    else:
+        trainer.evaluate()
 
 
 if __name__ == "__main__":

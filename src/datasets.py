@@ -11,25 +11,15 @@ class StudentPerformance(data.Dataset):
     config = Config()
     helper = Helper()
 
-    def __init__(self, root, train=True, debug_mode=False, subject='mat'):
+    def __init__(self, root, train=True, debug_mode=False):
         self.root = os.path.expanduser(root)
         self.train = train
         self.debug = debug_mode
         self.processed_data_path = os.path.join(self.root, 'processed')
+        self.training_file = os.path.join(self.processed_data_path, 'train.pt')
+        self.test_file = os.path.join(self.processed_data_path, 'test.pt')
+        self.test_set_size = self.config.TEST_SET_SIZE
 
-        if subject is 'mat':
-            self.csv_data_file = os.path.join(self.root, 'student-mat.csv')
-            self.test_set_size = self.config.MAT_TEST_SET_SIZE
-            self.training_file = os.path.join(self.processed_data_path, 'training-mat.pt')
-            self.test_file = os.path.join(self.processed_data_path, 'test-mat.pt')
-        elif subject is 'por':
-            self.csv_data_file = os.path.join(self.root, 'student-por.csv')
-            self.test_set_size = self.config.POR_TEST_SET_SIZE
-            self.training_file = os.path.join(self.processed_data_path, 'training-por.pt')
-            self.test_file = os.path.join(self.processed_data_path, 'test-por.pt')
-        else:
-            print('file not found' + subject)
-            return
 
         if not self.helper.check_path_exists(self.processed_data_path):
             self.pre_process()
@@ -53,41 +43,55 @@ class StudentPerformance(data.Dataset):
             }
         }
 
-        with open(self.csv_data_file, 'r', encoding='utf-8') as f:
-            rdr = csv.reader(f)
-            lines = []
-            for line in rdr:
-                line = line[0]
-                line = line.replace('\"', '').replace('\'', '')\
-                    .replace('yes', '1').replace('no', '0')\
-                    .replace('GP', '1').replace('MS', '2')\
-                    .replace('GT3', '1').replace('LE3', '2')\
-                    .replace('GP', '1').replace('MS', '2')\
-                    .replace('F', '1').replace('M', '2')\
-                    .replace('U', '1').replace('R', '2')\
-                    .replace('T', '1').replace('A', '2')\
-                    .replace('mother', '3').replace('father', '2').replace('other', '1')\
-                    .replace('teacher', '5').replace('health', '4').replace('services', '3')\
-                    .replace('at_home', '2').replace('other', '1')\
-                    .replace('teacher', '5').replace('home', '4').replace('reputation', '3').replace('course', '2')\
-                    .replace('home', '4').replace('reputation', '3').replace('course', '2')
+        for subject in ['mat', 'por']:
+            if subject is 'mat':
+                self.csv_data_file = os.path.join(self.root, 'student-mat.csv')
 
-                line = line.split(";")
-                lines.append(line)
-            lines = lines[1:]
+            elif subject is 'por':
+                self.csv_data_file = os.path.join(self.root, 'student-por.csv')
+            else:
+                print('file not found' + subject)
 
-            for i in range(len(lines)):
-                for j in range(len(lines[i])):
-                    lines[i][j] = float(lines[i][j])
+            with open(self.csv_data_file, 'r', encoding='utf-8') as f:
+                rdr = csv.reader(f)
+                lines = []
+                i = 0
+                for line in rdr:
+                    if i == self.config.TEST_SET_SIZE:
+                        mode = 'test'
+                    line = line[0]
+                    line = line.replace('\"', '').replace('\'', '')\
+                        .replace('yes', '1').replace('no', '0')\
+                        .replace('GP', '1').replace('MS', '2')\
+                        .replace('GT3', '1').replace('LE3', '2')\
+                        .replace('GP', '1').replace('MS', '2')\
+                        .replace('F', '1').replace('M', '2')\
+                        .replace('U', '1').replace('R', '2')\
+                        .replace('T', '1').replace('A', '2')\
+                        .replace('mother', '3').replace('father', '2').replace('other', '1')\
+                        .replace('teacher', '5').replace('health', '4').replace('services', '3')\
+                        .replace('at_home', '2').replace('other', '1')\
+                        .replace('teacher', '5').replace('home', '4').replace('reputation', '3').replace('course', '2')\
+                        .replace('home', '4').replace('reputation', '3').replace('course', '2')
 
-            for line in lines:
-                preprocessed[mode]['data'].append(line[:-1])
-                preprocessed[mode]['targets'].append(line[-1:])
+                    line = line.split(";")
+                    lines.append(line)
+                    i += 1
+                lines = lines[1:]
 
-            preprocessed[mode]['targets'] = torch.from_numpy(np.array(preprocessed[mode]['targets']))
-            preprocessed[mode]['data'] = torch.from_numpy(np.array(preprocessed[mode]['data']))
-            f.close()
+                for i in range(len(lines)):
+                    for j in range(len(lines[i])):
+                        lines[i][j] = float(lines[i][j])
 
+                for line in lines:
+                    preprocessed[mode]['data'].append(line[:-1])
+                    preprocessed[mode]['targets'].append(line[-1:])
+                f.close()
+
+        preprocessed[mode]['targets'] = torch.from_numpy(np.array(preprocessed[mode]['targets']))
+        preprocessed[mode]['data'] = torch.from_numpy(np.array(preprocessed[mode]['data']))
+
+        print(preprocessed)
         try:
             os.mkdir(self.processed_data_path)
         except FileExistsError:

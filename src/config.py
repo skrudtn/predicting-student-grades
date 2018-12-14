@@ -20,41 +20,12 @@ class ConstSingleton:
         self.__dict__[name] = value
 
 
-class ConfigRNN(ConstSingleton):
-    """Set Hyper-parameters of models in here.
-    """
-    def __init__(self):
-        # [Train]
-        self.LEARNING_RATE = 0.001
-        self.MAX_EPOCH = 300
-        self.WEIGHT_DECAY = 0.0003
-        self.CRITERION = torch.nn.NLLLoss()
-
-        # [Model]
-        self.BI_DIRECTION = True
-        self.HIDDEN_SIZE = 100
-        self.OUTPUT_SIZE = 2  # output is one of pos([1, 0]) and neg([0, 1]).
-        self.BATCH_SIZE = 32
-
-        # [Data]
-        self.PAD_WORD = "<PAD>"
-        self.EMBED_SIZE = 100
-        self.MAX_SEQ_SIZE = 500
-        self.WORD_EMBEDDING = "CBOW"
-
-        # [ETC]
-        self.DEBUG_MODE = False
-        self.LOGGING_ENABLE = True
-        self.CHECKPOINT_ENABLE = False
-
-
 class Config(ConstSingleton):
     """Set Hyper-parameters of models in here.
     """
     def __init__(self):
         # [Data]
-        self.MAT_TEST_SET_SIZE = 100
-        self.POR_TEST_SET_SIZE = 100
+        self.TEST_SET_SIZE = 100
 
         # [Train]
         self.LEARNING_RATE = 0.001
@@ -66,9 +37,10 @@ class Config(ConstSingleton):
         self.INPUT_SIZE = 32
         self.HIDDEN_SIZE = 12
         self.OUTPUT_SIZE = 1
-        self.BATCH_SIZE = 1
+        self.BATCH_SIZE = 2
 
         # [ETC]
-        self.DEBUG_MODE = True
+        self.DEBUG_MODE = False
         self.LOGGING_ENABLE = False
         self.CHECKPOINT_ENABLE = False
+        self.TRAIN_MODE = True
